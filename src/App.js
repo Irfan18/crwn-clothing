@@ -7,7 +7,7 @@ import ShopPage from './pages/shop/shop';
 import SignInSignUpPage from './pages/sign-in-sign-up/sign-in-sign-up';
 import Header from './components/header/header';
 
-import { auth } from './firebase/firebase.utils';
+import { createUserProfileDocument, auth } from './firebase/firebase.utils';
 
 class App extends React.Component {
   constructor() {
@@ -20,10 +20,28 @@ class App extends React.Component {
   unsubscribeFromAuth = null;
 
   componentDidMount() {
-    this.unsubscribeFromAuth = auth.onAuthStateChanged(user => {
-      this.setState({
-        currentUser: user
-      });
+    this.unsubscribeFromAuth = auth.onAuthStateChanged(async userAuth => {
+      console.log('Hi yes I am in authChange')
+      if(userAuth) {
+        console.log('Checked userauth and creating user profile')
+        const userRef = await createUserProfileDocument(userAuth);
+
+        userRef.onSnapshot(snapshot => {
+          this.setState({
+            currentUser: {
+              id: snapshot.id,
+              ...snapshot.data()
+            }
+          })
+
+          console.log(this.state, 'check state in snap')
+        })
+      } else {
+        this.setState({
+          currentUser: userAuth
+        })
+      }
+      
     })
   }
 
